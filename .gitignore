@@ -1,0 +1,13 @@
+.env
+node_modules/
+runtime/dist/
+host/.build/
+.swiftpm/
+*.xcuserstate
+xcuserdata/
+DerivedData/
+dev/work/
+dev/agent/sessions/
+dev/agent/auth.json
+dev/agent/settings.json
+dev/agent/models-store.json

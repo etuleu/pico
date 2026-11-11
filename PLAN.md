@@ -66,6 +66,39 @@ pico/
 - API keys only for now.
 - Repo: git@github.com:etuleu/pico.git
 
+## Status
+
+### M0: done
+
+pi's unmodified `main(["--mode", "rpc"])` runs in JavaScriptCore via `host/` (`pico-cli` on macOS).
+Verified with DeepInfra (`deepseek-ai/DeepSeek-V4-Flash`): streaming, `read` / `write` / `edit` / `bash`,
+sessions. Session files are interchangeable with desktop pi (pico -> pi -> pico on one session file).
+
+Numbers (M-series Mac, debug host): prelude 0.77 MiB, pi.js 13.6 MiB; evaluating pi.js ~350 ms.
+
+How it fits together:
+
+- `runtime/src/prelude/`: globals JSC lacks (timers, console, TextEncoder/Decoder, Event/AbortController,
+  URL, web streams, fetch, Buffer, process, crypto). Owns the single copies of buffer/events/readable-stream.
+- `runtime/src/node/`: `node:*` shims. fs, child_process, crypto, os are host-backed; http/net/worker_threads
+  etc. are stubs that throw only when used.
+- `runtime/build.mjs`: esbuild, IIFE, maps every `node:*` import to a shim, keeps pi's `src/` side effects,
+  copies pi's assets to `dist/pkg` (`PI_PACKAGE_DIR`).
+- `host/Sources/PicoHost`: `PicoRuntime` (JS thread + JSContext), `HostFS` (POSIX), `HostFetch`
+  (URLSession streaming), `HostCrypto` (CryptoKit), `HostProcess` (pluggable `ProcessBackend`).
+- Test: `cd runtime && npm run smoke`; agent: `pico-cli --bundle runtime/dist --cwd <dir> -- <pi args>`.
+
+Known gaps found in M0 (to address in M1/M2):
+
+- fd-based reads (`readSync`) re-read the whole file per call: fine for now, O(n^2) for large session files.
+  Move fds into the host.
+- No unhandled promise rejection reporting (the JSC API for it is private).
+- `AsyncLocalStorage` only tracks synchronous scopes.
+- zlib compression, `fs.watch`, http servers (OAuth callbacks), worker threads, WASM (photon, codemode) are not
+  available yet.
+- grep / find tools spawn `rg` / `fd`: need JS or host implementations on iOS (`GrepOperations`, `FindOperations`).
+- Bundle size: jiti (2.3 MiB), highlight.js (1.5 MiB), google-genai / auth could be trimmed or lazy-loaded.
+
 ## Open questions / risks
 
 - Size and behavior of the Node shim layer (resolved by M0).
