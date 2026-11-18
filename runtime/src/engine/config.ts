@@ -35,6 +35,8 @@ interface ModelsFile {
 				contextWindow?: number;
 				maxTokens?: number;
 				cost?: { input?: number; output?: number; cacheRead?: number; cacheWrite?: number };
+				/** Extra request body fields for OpenAI-compatible APIs (pi: free-form, e.g. temperature, service_tier). */
+				samplingParams?: Record<string, unknown>;
 			}[];
 		}
 	>;
@@ -102,7 +104,8 @@ export function loadModels(agentDir: string, log: (message: string) => void): Mu
 			maxTokens: model.maxTokens ?? 16_384,
 			cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, ...model.cost },
 			headers: config.headers,
-		}));
+			...(model.samplingParams ? { samplingParams: model.samplingParams } : {}),
+		}) as Model<Api>);
 		models.setProvider(
 			createProvider({
 				id,
