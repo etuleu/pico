@@ -1,8 +1,9 @@
 // Prints a pi models.json `deepinfra` provider with DeepInfra's featured chat models that support tools.
 // Usage: DEEPINFRA_API_KEY=... node scripts/deepinfra-featured.mjs [--priority] > models.json
 // Prices: DeepInfra reports cents per token; pi uses dollars per million tokens (cents * 10_000).
-// --priority: request DeepInfra's priority service tier (front of the queue under load, 1.5x price) on models that
-// support it, via pi's `samplingParams`, and list their prices at 1.5x so pico's cost display stays right.
+// --priority: request DeepInfra's priority service tier (front of the queue under load, 1.5x price) on every model,
+// via pi's `samplingParams`. Models without priority support serve and bill such requests normally, so only models
+// DeepInfra tags `priority` get their prices listed at 1.5x (keeps pico's cost display right).
 // https://deepinfra.com/blog/priority-service-tier
 const response = await fetch("https://api.deepinfra.com/models/featured", {
 	headers: process.env.DEEPINFRA_API_KEY ? { Authorization: `Bearer ${process.env.DEEPINFRA_API_KEY}` } : {},
@@ -17,8 +18,7 @@ const round = (n) => Math.round(n * 1000) / 1000;
 const models = featured
 	.filter((m) => m.type === "text-generation" && m.tags?.includes("tools") && !m.deprecated)
 	.map((m) => {
-		const tier = priority && m.tags.includes("priority");
-		const rate = tier ? (m.pricing?.rate_per_service_tier_priority ?? 1.5) : 1;
+		const rate = priority && m.tags.includes("priority") ? (m.pricing?.rate_per_service_tier_priority ?? 1.5) : 1;
 		const input = round(perMillion(m.pricing?.cents_per_input_token) * rate);
 		const cached = m.pricing?.rate_per_input_token_cached;
 		return {
@@ -34,7 +34,7 @@ const models = featured
 				cacheRead: typeof cached === "number" ? round(input * cached) : 0,
 				cacheWrite: 0,
 			},
-			...(tier ? { samplingParams: { service_tier: "priority" } } : {}),
+			...(priority ? { samplingParams: { service_tier: "priority" } } : {}),
 		};
 	});
 
