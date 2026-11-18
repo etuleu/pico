@@ -131,6 +131,19 @@ Storage stays files (durable's JSONL storage, one directory per session); no SQL
 Remaining for M1: better markdown (lists, headings, tables),
 trim provider SDKs from the bundle (5.8 MiB), session rename, files browser.
 
+### M2: in progress (shell and git)
+
+Shell: **just-bash** (vercel-labs, Apache-2.0), a bash interpreter in TypeScript, instead of ios_system. ios_system has
+no `sh`/`bash` (only single commands with pipes), needs native frameworks per command group, and adds tens of MB.
+just-bash gives bash syntax (pipes, `&&`, `if`, `for`, functions, globs) and ~80 commands (grep, rg, sed, awk, find,
+xargs, jq, curl via fetch, ...) in JS, identical on simulator and device. `runtime/src/engine/shell-env.ts` wraps it as
+durable's `ExecutionEnv.exec()` over the real file system (`ReadWriteFs` at `/`), with /bin and /usr/bin stand-ins so
+command lookup works on iOS. Verified on the iPhone.
+
+Known gaps: no streaming output (delivered when the command ends), `tar z` needs `CompressionStream`, no python yet.
+
+Next: git (isomorphic-git as a `git` command: clone / status / add / commit / push / pull over HTTPS with a token).
+
 ## Open questions / risks
 
 - Size and behavior of the Node shim layer (resolved by M0).

@@ -68,7 +68,6 @@ final class Engine {
         env["PICO_SESSIONS_DIR"] = paths.sessionsDir.path
         env["PICO_WORKSPACE"] = paths.workspace.path
         env["PICO_PLATFORM"] = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
-        env["PICO_NO_SHELL"] = "1"
 
         let config = PicoRuntimeConfig(
             bundleDirectory: bundle,

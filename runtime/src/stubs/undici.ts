@@ -33,6 +33,11 @@ export function getGlobalDispatcher(): Dispatcher {
 	return globalDispatcher;
 }
 
+/** Socket connectors are not available; dispatchers built with them are ignored by the URLSession-backed fetch. */
+export function buildConnector(): (options: unknown, callback: (error: Error | null) => void) => void {
+	return (_options, callback) => callback(new Error("undici connectors are not supported on this platform"));
+}
+
 export const fetch = (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args);
 export const Headers = globalThis.Headers;
 export const Request = globalThis.Request;
@@ -51,6 +56,7 @@ export default {
 	RetryAgent,
 	setGlobalDispatcher,
 	getGlobalDispatcher,
+	buildConnector,
 	fetch,
 	Headers,
 	Request,

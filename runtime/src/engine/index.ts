@@ -4,13 +4,13 @@ import { writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { MutableModels } from "@earendil-works/pi-ai";
-import { createRegistry, defineExtension } from "@earendil-works/pi-durable";
-import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
-import { CodingTools, createEditTool, createReadTool, createWriteTool } from "@earendil-works/pi-durable/tools";
+import { createRegistry } from "@earendil-works/pi-durable";
+import { CodingTools } from "@earendil-works/pi-durable/tools";
 import { createCodingExtension } from "./coding.ts";
 import { loadModels, loadSettings, type Settings } from "./config.ts";
 import type { Command, Event, ModelInfo, Response } from "./protocol.ts";
 import { OpenSession, SessionStore } from "./session.ts";
+import { PicoExecutionEnv } from "./shell-env.ts";
 
 const VERSION = "0.1.0";
 
@@ -28,12 +28,7 @@ function log(message: string): void {
 
 const store = new SessionStore(sessionsDir);
 const registry = createRegistry();
-// Without a shell backend (iOS until ios_system lands), offer only the file tools so the model does not try bash.
-registry.install(
-	process.env.PICO_NO_SHELL === "1"
-		? defineExtension({ name: "coding-tools", tools: [createReadTool(), createWriteTool(), createEditTool()] })
-		: CodingTools,
-);
+registry.install(CodingTools);
 registry.install(createCodingExtension({ agentDir, platform: process.env.PICO_PLATFORM || "iOS" }));
 let models: MutableModels = loadModels(agentDir, log);
 let settings: Settings = loadSettings(agentDir);
@@ -84,7 +79,7 @@ async function open(sessionId: string): Promise<OpenSession> {
 		meta,
 		models,
 		registry,
-		env: (cwd) => new NodeExecutionEnv({ cwd }),
+		env: (cwd) => new PicoExecutionEnv({ cwd }),
 		initialAgent: model ? { model } : {},
 		emit: send,
 	});
