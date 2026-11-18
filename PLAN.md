@@ -99,10 +99,30 @@ Known gaps found in M0 (to address in M1/M2):
 - grep / find tools spawn `rg` / `fd`: need JS or host implementations on iOS (`GrepOperations`, `FindOperations`).
 - Bundle size: jiti (2.3 MiB), highlight.js (1.5 MiB), google-genai / auth could be trimmed or lazy-loaded.
 
-### Engine decision (pending)
+### Engine decision: pi-durable (decided 2026-11-18)
 
-pi-durable was evaluated as an alternative engine; see `docs/durable-evaluation.md`. Recommendation: switch to durable,
-keep file-format compatibility (AGENTS.md, skills, models.json), drop session-file and CLI-extension compatibility.
+pico runs `@earendil-works/pi-durable` (pinned via the submodule), not coding-agent. See `docs/durable-evaluation.md`.
+Compatibility is kept at the level of files (AGENTS.md, skills, prompt templates, models.json), not session files or
+pi CLI extensions. The M0 coding-agent bundle stays buildable as a fallback until durable reaches parity.
+
+### M1: in progress (iOS app on pi-durable)
+
+Working in the iOS simulator (iPhone 17 Pro, iOS 27): durable engine in JavaScriptCore, DeepInfra streaming, read /
+write / edit on the app's Documents folder, SwiftUI chat (tool cards, markdown, live streaming, stop), session list,
+model menu, API keys in the Keychain, and automatic resume of a run cut off by the app being killed (verified by
+terminating the app mid-run).
+
+Layout:
+
+- `runtime/src/engine/`: the engine. `protocol.ts` (JSONL commands/events, mirrored in `app/Sources/Engine/Protocol.swift`),
+  `session.ts` (one durable JSONL storage per session in `~/.pi/pico/sessions/<id>/`), `config.ts` (pi-ai built-in
+  providers + pi's models.json), `coding.ts` (pi's system prompt structure, AGENTS.md), `ui.ts` (view -> items).
+- `app/`: XcodeGen project (`project.yml`), `run-sim.sh` builds, installs and launches on a simulator
+  (`PICO_AUTOPROMPT="..."` runs one prompt, for tests).
+- Engine test on the Mac: `dev/run-engine.sh <seconds> <commands.jsonl>`.
+
+Remaining for M1: better markdown (lists, headings, tables), run on a real device (signing), SQLite storage,
+trim provider SDKs from the bundle (5.8 MiB), session rename, files browser.
 
 ## Open questions / risks
 

@@ -1,0 +1,55 @@
+name: Pico
+options:
+  bundleIdPrefix: dev.pico
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+packages:
+  PicoHost:
+    path: ../host
+targets:
+  Pico:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Resources
+        buildPhase: resources
+    dependencies:
+      - package: PicoHost
+        product: PicoHost
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: pico
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.pico.app
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: NO
+    preBuildScripts:
+      - name: Copy pico runtime
+        basedOnDependencyAnalysis: false
+        script: |
+          # The runtime is built by `cd runtime && npm run build` (prelude.js, engine.js).
+          src="$SRCROOT/../runtime/dist"
+          dst="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/runtime"
+          if [ ! -f "$src/engine.js" ]; then
+            echo "error: $src/engine.js missing; run: cd runtime && npm run build"
+            exit 1
+          fi
+          mkdir -p "$dst"
+          cp "$src/prelude.js" "$src/engine.js" "$dst/"

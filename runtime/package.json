@@ -8,6 +8,9 @@
     "smoke": "node build.mjs && ../host/.build/debug/pico-cli --bundle dist --script dist/smoke.js < /dev/null"
   },
   "dependencies": {
+    "@earendil-works/chord": "file:../vendor/pi/packages/chord",
+    "@earendil-works/pi-ai": "file:../vendor/pi/packages/ai",
+    "@earendil-works/pi-durable": "file:../vendor/pi/packages/durable",
     "buffer": "6.0.3",
     "core-js": "3.51.0",
     "events": "3.3.0",
