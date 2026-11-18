@@ -13,6 +13,7 @@ import {
 import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
 import { Bash, getCommandNames, type IFileSystem, ReadWriteFs } from "just-bash";
 import { gitCommand } from "./git.ts";
+import { compatPlugin } from "./shell-compat.ts";
 
 /** Longest command the shell runs before it is stopped, as in durable's NodeExecutionEnv. */
 const MAX_TIMEOUT_SECONDS = 3600;
@@ -109,6 +110,7 @@ export class PicoExecutionEnv extends NodeExecutionEnv {
 				// Hardening for untrusted guests in a shared server process; here the user's agent runs on the user's device.
 				defenseInDepth: false,
 			});
+			bash.registerTransformPlugin(compatPlugin);
 			const result = await bash.exec(script, { signal: controller.signal });
 			if (timedOut) return err(new ExecutionError("timeout", `timeout:${timeout}`));
 			if (signal?.aborted) return err(new ExecutionError("aborted", "aborted"));

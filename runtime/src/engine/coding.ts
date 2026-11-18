@@ -81,6 +81,7 @@ export function createCodingExtension(options: { agentDir: string; platform: str
 					"git is available (init, clone, status, add, rm, commit, log, diff, branch, checkout, switch, remote, fetch, pull, push, config, rev-parse); HTTPS remotes use the user's GitHub token.",
 					"Not available: package managers, compilers, node, python, ssh, sudo. Do not try to install them.",
 					"Write files in the working directory or under $TMPDIR; /tmp and system folders are not writable.",
+					"Past pico chat sessions are in ~/.pi/pico/sessions/<id>/ (meta.json has the title; store/*.jsonl holds the transcript); search them when the user refers to earlier chats.",
 				].join("\n");
 			}),
 			section("project_context", (input) => {
