@@ -13,3 +13,4 @@ dev/agent/settings.json
 dev/agent/models-store.json
 app/build/
 app/Pico.xcodeproj/
+dev/sessions/
