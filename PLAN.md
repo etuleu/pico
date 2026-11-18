@@ -166,6 +166,11 @@ The system prompt has an `environment` section listing what the shell can and ca
 - **Export a chat as Markdown.** Sessions are stored in durable's commit-log format (`sessions/<id>/store/*.jsonl`),
   which is hard to read. Add an export (share sheet / write into the workspace) that renders the transcript as
   Markdown: user and assistant messages, tool calls with arguments and output, model and cost.
+- **Long chats.** Today every open session is fully in memory: durable's JSONL storage replays and keeps the whole
+  history, the engine loads the full transcript and resends all items to the app on changes, and SwiftUI renders the
+  whole list. Ideas: send only the newest window of items plus "load earlier" (durable's `ConversationTranscript`
+  already supports windows and gaps), send item diffs instead of full lists, cap rendered tool output, and rely on
+  durable's compaction for model context. Measure first with a long session on the phone.
 - Trim the engine bundle (10.9 MiB: provider SDKs, just-bash extras like sql.js and HTML-to-markdown).
 
 ## Open questions / risks

@@ -1,4 +1,5 @@
-// Prints a pi models.json `deepinfra` provider with DeepInfra's featured chat models that support tools.
+// Prints a pi models.json `deepinfra` provider with DeepInfra's featured chat models that support tools, plus the
+// models listed in scripts/deepinfra-extra-models.txt.
 // Usage: DEEPINFRA_API_KEY=... node scripts/deepinfra-featured.mjs [--priority] > models.json
 // Prices: DeepInfra reports cents per token; pi uses dollars per million tokens (cents * 10_000).
 // --priority: request DeepInfra's priority service tier (front of the queue under load, 1.5x price) on every model,
@@ -10,6 +11,20 @@ const response = await fetch("https://api.deepinfra.com/models/featured", {
 });
 if (!response.ok) throw new Error(`DeepInfra: ${response.status} ${await response.text()}`);
 const featured = await response.json();
+
+const extraFile = new URL("./deepinfra-extra-models.txt", import.meta.url);
+const { readFileSync } = await import("node:fs");
+const extraIds = readFileSync(extraFile, "utf8")
+	.split("\n")
+	.map((line) => line.trim())
+	.filter((line) => line && !line.startsWith("#") && !featured.some((m) => m.model_name === line));
+for (const id of extraIds) {
+	const extra = await fetch(`https://api.deepinfra.com/models/${id}`, {
+		headers: process.env.DEEPINFRA_API_KEY ? { Authorization: `Bearer ${process.env.DEEPINFRA_API_KEY}` } : {},
+	});
+	if (!extra.ok) throw new Error(`DeepInfra: ${id}: ${extra.status}`);
+	featured.push(await extra.json());
+}
 
 const priority = process.argv.includes("--priority");
 const perMillion = (cents) => (typeof cents === "number" ? cents * 10_000 : 0);

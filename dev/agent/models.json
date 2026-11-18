@@ -454,6 +454,26 @@
           "samplingParams": {
             "service_tier": "priority"
           }
+        },
+        {
+          "id": "thinkingmachines/Inkling-2-Small",
+          "name": "Inkling-2-Small",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 1048576,
+          "maxTokens": 32768,
+          "cost": {
+            "input": 0.3,
+            "output": 1,
+            "cacheRead": 0.03,
+            "cacheWrite": 0
+          },
+          "samplingParams": {
+            "service_tier": "priority"
+          }
         }
       ]
     }

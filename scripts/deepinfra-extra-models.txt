@@ -1,0 +1,3 @@
+# DeepInfra models to include besides the featured list, one model id per line.
+# Used by scripts/deepinfra-featured.mjs.
+thinkingmachines/Inkling-2-Small
