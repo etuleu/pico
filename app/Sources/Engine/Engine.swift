@@ -57,6 +57,12 @@ final class Engine {
         }
 
         var env = ProcessInfo.processInfo.environment
+        #if DEBUG
+        // Dev convenience: API keys passed at launch (simctl / devicectl environment) are saved to the Keychain.
+        for (name, value) in env where name.hasSuffix("_API_KEY") && !value.isEmpty && Keychain.get(name) == nil {
+            Keychain.set(value, for: name)
+        }
+        #endif
         for (name, value) in Keychain.allSecrets() { env[name] = value }
         env["PI_CODING_AGENT_DIR"] = paths.agentDir.path
         env["PICO_SESSIONS_DIR"] = paths.sessionsDir.path
@@ -291,9 +297,17 @@ final class Engine {
         if !event.busy { endBackgroundTask() }
     }
 
+    @ObservationIgnored private lazy var logFile: FileHandle? = {
+        // Library/Caches/engine.log, recreated per launch; readable with `devicectl device copy from`.
+        let url = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("engine.log")
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+        return try? FileHandle(forWritingTo: url)
+    }()
+
     private func appendLog(_ line: String) {
         logs.append(line)
         if logs.count > 500 { logs.removeFirst(logs.count - 500) }
+        logFile?.write(Data("\(Date().formatted(.iso8601)) \(line)\n".utf8))
         #if DEBUG
         print(line)
         #endif

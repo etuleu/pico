@@ -121,7 +121,10 @@ Layout:
   (`PICO_AUTOPROMPT="..."` runs one prompt, for tests).
 - Engine test on the Mac: `dev/run-engine.sh <seconds> <commands.jsonl>`.
 
-Remaining for M1: better markdown (lists, headings, tables), run on a real device (signing), SQLite storage,
+Runs on a real iPhone 17 Pro Max (team D3RVDPR3J3, bundle id `com.etuleu.pico`): `app/run-device.sh`. Engine startup
+on the device: prelude 22 ms, engine.js 73 ms. Engine log: `Library/Caches/engine.log` in the app container.
+
+Remaining for M1: better markdown (lists, headings, tables), SQLite storage,
 trim provider SDKs from the bundle (5.8 MiB), session rename, files browser.
 
 ## Open questions / risks
