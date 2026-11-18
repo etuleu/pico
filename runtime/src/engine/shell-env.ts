@@ -12,6 +12,7 @@ import {
 } from "@earendil-works/pi-durable/env";
 import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
 import { Bash, getCommandNames, type IFileSystem, ReadWriteFs } from "just-bash";
+import { gitCommand } from "./git.ts";
 
 /** Longest command the shell runs before it is stopped, as in durable's NodeExecutionEnv. */
 const MAX_TIMEOUT_SECONDS = 3600;
@@ -21,7 +22,7 @@ const MAX_TIMEOUT_SECONDS = 3600;
  * executables in /bin and /usr/bin. just-bash finds commands by looking for files on $PATH; iOS has /usr/bin but
  * none of these commands in it, so lookups would fail without the stand-ins.
  */
-const commands = new Set<string>(getCommandNames());
+const commands = new Set<string>([...getCommandNames(), gitCommand.name]);
 
 function commandPath(path: string): boolean {
 	const match = /^\/(?:usr\/)?bin\/([^/]+)$/.exec(path);
@@ -93,6 +94,7 @@ export class PicoExecutionEnv extends NodeExecutionEnv {
 		try {
 			const env: Record<string, string> = {
 				HOME: process.env.HOME ?? "/",
+				TMPDIR: process.env.TMPDIR ?? "/tmp",
 				USER: "mobile",
 				PWD: cwd,
 				...(options?.inheritEnv === false ? {} : this.bashEnv),
@@ -103,6 +105,7 @@ export class PicoExecutionEnv extends NodeExecutionEnv {
 				cwd,
 				env,
 				network: { dangerouslyAllowFullInternetAccess: true },
+				customCommands: [gitCommand],
 				// Hardening for untrusted guests in a shared server process; here the user's agent runs on the user's device.
 				defenseInDepth: false,
 			});

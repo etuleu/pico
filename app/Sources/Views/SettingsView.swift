@@ -18,6 +18,11 @@ struct SettingsView: View {
         ("DeepSeek", "DEEPSEEK_API_KEY"),
     ]
 
+    /// Tokens for tools the agent uses (not model providers).
+    private static let tokens: [(name: String, env: String)] = [
+        ("GitHub token", "GITHUB_TOKEN"),
+    ]
+
     var body: some View {
         NavigationStack {
             Form {
@@ -38,6 +43,25 @@ struct SettingsView: View {
                     Text("API keys")
                 } footer: {
                     Text("Keys are stored in the iOS Keychain and sent only to their provider.")
+                }
+
+                Section {
+                    ForEach(Self.tokens, id: \.env) { token in
+                        NavigationLink {
+                            APIKeyEditor(name: token.name, env: token.env)
+                        } label: {
+                            HStack {
+                                Text(token.name)
+                                Spacer()
+                                Text(Keychain.get(token.env) == nil ? "Not set" : "Set")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Tokens")
+                } footer: {
+                    Text("Used by git for HTTPS push and private repositories. A fine-grained GitHub token with Contents read/write is enough.")
                 }
 
                 Section("Models") {

@@ -142,7 +142,12 @@ command lookup works on iOS. Verified on the iPhone.
 
 Known gaps: no streaming output (delivered when the command ends), `tar z` needs `CompressionStream`, no python yet.
 
-Next: git (isomorphic-git as a `git` command: clone / status / add / commit / push / pull over HTTPS with a token).
+git: `runtime/src/engine/git.ts`, a `git` command in the shell on isomorphic-git (MIT, pure JS) over the real file
+system and fetch: init, clone, status, add, rm, commit, log, diff, branch, checkout/switch, remote, fetch, pull, push,
+config, rev-parse. Repositories are normal `.git` directories (checked with real git: same log, clean tree, fsck ok).
+HTTPS auth uses GITHUB_TOKEN (Settings > Tokens, Keychain). Clone verified on the iPhone; push not yet verified.
+
+The system prompt has an `environment` section listing what the shell can and cannot do.
 
 ## Open questions / risks
 
