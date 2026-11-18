@@ -29,6 +29,14 @@ struct AppPaths {
            let template = Bundle.main.url(forResource: "default-models", withExtension: "json") {
             try fm.copyItem(at: template, to: models)
         }
+        // Default agents, only when the folder does not exist yet: deleting an agent file is respected.
+        let agents = agentDir.appendingPathComponent("agents")
+        if !fm.fileExists(atPath: agents.path) {
+            try fm.createDirectory(at: agents, withIntermediateDirectories: true)
+            if let template = Bundle.main.url(forResource: "default-agent-web-search", withExtension: "md") {
+                try fm.copyItem(at: template, to: agents.appendingPathComponent("web-search.md"))
+            }
+        }
         let readme = workspace.appendingPathComponent("README.md")
         if !fm.fileExists(atPath: readme.path) {
             try "# pico workspace\n\nFiles here are visible to the agent and in the Files app.\n".write(to: readme, atomically: true, encoding: .utf8)

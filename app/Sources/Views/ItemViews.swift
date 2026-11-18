@@ -115,7 +115,7 @@ struct ToolCard: View {
         switch name {
         case "bash": args["command"]?.string ?? ""
         case "read", "write", "edit": relative(args["path"]?.string ?? "")
-        default: args.compact
+        default: args["task"]?.string ?? args["query"]?.string ?? args["url"]?.string ?? args.compact
         }
     }
 

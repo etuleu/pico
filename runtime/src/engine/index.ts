@@ -6,11 +6,13 @@ import { join } from "node:path";
 import type { MutableModels } from "@earendil-works/pi-ai";
 import { createRegistry } from "@earendil-works/pi-durable";
 import { CodingTools } from "@earendil-works/pi-durable/tools";
+import { createAgentsExtension, loadAgents } from "./agents.ts";
 import { createCodingExtension } from "./coding.ts";
 import { loadModels, loadSettings, type Settings } from "./config.ts";
 import type { Command, Event, ModelInfo, Response } from "./protocol.ts";
 import { OpenSession, SessionStore } from "./session.ts";
 import { PicoExecutionEnv } from "./shell-env.ts";
+import { WebTools } from "./web.ts";
 
 const VERSION = "0.1.0";
 
@@ -30,6 +32,10 @@ const store = new SessionStore(sessionsDir);
 const registry = createRegistry();
 registry.install(CodingTools);
 registry.install(createCodingExtension({ agentDir, platform: process.env.PICO_PLATFORM || "iOS" }));
+// Tools only agents use (listed in their files); hidden from the main conversation below.
+registry.install(WebTools);
+const agents = loadAgents(agentDir, log);
+registry.install(createAgentsExtension(agents, registry, log));
 let models: MutableModels = loadModels(agentDir, log);
 let settings: Settings = loadSettings(agentDir);
 let current: OpenSession | undefined;
@@ -81,6 +87,7 @@ async function open(sessionId: string): Promise<OpenSession> {
 		registry,
 		env: (cwd) => new PicoExecutionEnv({ cwd }),
 		initialAgent: model ? { model } : {},
+		mainAgent: { extensions: { remove: [WebTools] } },
 		emit: send,
 	});
 	return current;
@@ -98,7 +105,15 @@ async function handle(command: Command): Promise<unknown> {
 			// A session whose run was cut off (the app was killed or suspended) is reported so the app reopens it;
 			// opening it lets pi-durable continue the run.
 			const interrupted = sessions.find((session) => session.running)?.id;
-			return { version: VERSION, agentDir, workspace, sessions, models: await availableModels(), interrupted };
+			return {
+				version: VERSION,
+				agentDir,
+				workspace,
+				sessions,
+				models: await availableModels(),
+				interrupted,
+				agents: agents.map(({ name, description, model }) => ({ name, description, model })),
+			};
 		}
 		case "list_sessions":
 			return store.list();

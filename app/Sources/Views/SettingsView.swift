@@ -21,6 +21,7 @@ struct SettingsView: View {
     /// Tokens for tools the agent uses (not model providers).
     private static let tokens: [(name: String, env: String)] = [
         ("GitHub token", "GITHUB_TOKEN"),
+        ("Perplexity (web search)", "PERPLEXITY_API_KEY"),
     ]
 
     var body: some View {
@@ -61,7 +62,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Tokens")
                 } footer: {
-                    Text("Used by git for HTTPS push and private repositories. A fine-grained GitHub token with Contents read/write is enough.")
+                    Text("GitHub: git push and private repositories (a fine-grained token with Contents read/write). Perplexity: the web_search agent.")
                 }
 
                 Section("Models") {

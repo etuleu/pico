@@ -73,6 +73,8 @@ export interface OpenSessionOptions {
 	env: (cwd: string) => ExecutionEnv;
 	/** Agent choices for a session opened for the first time. */
 	initialAgent: AgentChange;
+	/** Applied to the main conversation on every open (e.g. hiding tools only agents use). */
+	mainAgent?: AgentChange;
 	emit: (event: ViewEvent) => void;
 }
 
@@ -105,6 +107,7 @@ export class OpenSession {
 			context,
 		);
 		this.root = await this.harness.root(context, { agent: { cwd: meta.cwd, ...this.options.initialAgent } });
+		if (this.options.mainAgent) await this.root.configure(this.options.mainAgent, context);
 
 		// Full history first, then the watch appends.
 		let cursor: Parameters<Conversation["entries"]>[2];
