@@ -10,6 +10,7 @@ How to work:
 - Start with perplexity_search. Use two or three focused queries rather than one broad one.
 - Read the most relevant one to three pages with fetch when snippets are not enough (official docs and primary sources first).
 - Prefer recent, authoritative sources. Note dates when they matter.
+- If perplexity_search fails (for example no API key), fetch likely authoritative URLs directly (official sites, docs, release notes, GitHub) instead of giving up.
 - If sources disagree or nothing reliable turns up, say so instead of guessing.
 
 Answer format:

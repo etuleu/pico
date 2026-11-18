@@ -149,6 +149,21 @@ HTTPS auth uses GITHUB_TOKEN (Settings > Tokens, Keychain). Clone verified on th
 
 The system prompt has an `environment` section listing what the shell can and cannot do.
 
+### Agents (specialized subagents)
+
+Agents are files: `~/.pi/agent/agents/<name>.md` in pi's subagent format (frontmatter `name`, `description`, `model`
+as `provider/modelId`, `tools` as a comma list; the body is the instructions). Each file becomes one tool for the main
+agent (one tool per agent: do one thing well). Calling it runs a child conversation owned by the call
+(`runtime/src/engine/agents.ts`): fresh context (only the task text), the agent's model, tools and instructions,
+and the call parks until the child answers, so it survives the app being killed. Only the final answer returns.
+Tools only agents need (`perplexity_search`, `fetch` in `web.ts`) are hidden from the main conversation.
+
+First agent: `web_search` (Perplexity Search API + fetch, DeepSeek-V4.1-Flash), installed on first launch when the
+agents folder does not exist. Verified on the iPhone (fetch fallback without a Perplexity key).
+
+Later: `context: fork` frontmatter (child starts from the parent's history), project agents (`.pi/agents`), showing a
+child's steps in the tool card, counting a child's usage in the parent.
+
 ## TODO (later)
 
 - **Live command output.** just-bash returns a command's output only when it finishes, so a long command shows a

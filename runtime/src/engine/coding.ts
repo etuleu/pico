@@ -78,7 +78,7 @@ export function createCodingExtension(options: { agentDir: string; platform: str
 				return [
 					"The bash tool runs in pico's built-in shell (a bash interpreter, not a full Unix system).",
 					"Available: bash syntax (pipes, redirects, &&, if/for/while, functions) and common commands such as ls, cat, cp, mv, rm, mkdir, find, grep, rg, sed, awk, sort, uniq, wc, head, tail, cut, tr, xargs, diff, jq, yq, curl, base64, sha256sum, tar, gzip, date, sleep.",
-					"git is available (init, clone, status, add, rm, commit, log, diff, branch, checkout, switch, remote, fetch, pull, push, config, rev-parse); HTTPS remotes use the user's GitHub token.",
+					"git is available (init, clone, status, add, rm, commit, log, diff, branch, checkout, switch, remote, fetch, pull, push, ls-remote, config, rev-parse); HTTPS remotes use the user's GitHub token.",
 					"Not available: package managers, compilers, node, python, ssh, sudo. Do not try to install them.",
 					"Write files in the working directory or under $TMPDIR; /tmp and system folders are not writable.",
 					"Past pico chat sessions are in ~/.pi/pico/sessions/<id>/ (meta.json has the title; store/*.jsonl holds the transcript); search them when the user refers to earlier chats.",

@@ -11,7 +11,7 @@ import {
 	type ShellExecResult,
 } from "@earendil-works/pi-durable/env";
 import { NodeExecutionEnv } from "@earendil-works/pi-durable/env/node";
-import { Bash, getCommandNames, type IFileSystem, ReadWriteFs } from "just-bash";
+import { Bash, getCommandNames, getNetworkCommandNames, type IFileSystem, ReadWriteFs } from "just-bash";
 import { gitCommand } from "./git.ts";
 import { compatPlugin } from "./shell-compat.ts";
 
@@ -23,7 +23,8 @@ const MAX_TIMEOUT_SECONDS = 3600;
  * executables in /bin and /usr/bin. just-bash finds commands by looking for files on $PATH; iOS has /usr/bin but
  * none of these commands in it, so lookups would fail without the stand-ins.
  */
-const commands = new Set<string>([...getCommandNames(), gitCommand.name]);
+// Network commands (curl, html-to-markdown) are listed separately by just-bash.
+const commands = new Set<string>([...getCommandNames(), ...getNetworkCommandNames(), gitCommand.name]);
 
 function commandPath(path: string): boolean {
 	const match = /^\/(?:usr\/)?bin\/([^/]+)$/.exec(path);

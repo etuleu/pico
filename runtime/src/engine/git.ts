@@ -96,7 +96,7 @@ async function run(args: string[], cwd: string, env: Env, io: Io): Promise<numbe
 		case "help":
 		case "--help":
 			io.out.push(
-				"usage: git <command>\n\ncommands: init clone status add rm commit log diff branch checkout switch remote fetch pull push config rev-parse show-ref\n(pico: isomorphic-git; auth via GITHUB_TOKEN)\n",
+				"usage: git <command>\n\ncommands: init clone status add rm commit log diff branch checkout switch remote fetch pull push ls-remote config rev-parse show-ref\n(pico: isomorphic-git; auth via GITHUB_TOKEN)\n",
 			);
 			return 0;
 		case "--version":
@@ -389,6 +389,24 @@ async function run(args: string[], cwd: string, env: Env, io: Io): Promise<numbe
 			}
 			const oid = await git.resolveRef({ fs, dir, ref });
 			io.out.push(`${rest.includes("--short") ? oid.slice(0, 7) : oid}\n`);
+			return 0;
+		}
+		case "ls-remote": {
+			const positional = rest.filter((a) => !a.startsWith("-"));
+			let url = positional[0] ?? "origin";
+			if (!/^https?:\/\//.test(url)) {
+				const dir = await findRoot(cwd);
+				url = String((await git.getConfig({ fs, dir, path: `remote.${url}.url` })) ?? url);
+			}
+			const refs = await git.listServerRefs({ http, url, onAuth: auth(env), symrefs: true, peelTags: true });
+			const tagsOnly = rest.includes("--tags") || rest.includes("-t");
+			const headsOnly = rest.includes("--heads") || rest.includes("-h");
+			for (const ref of refs) {
+				if (tagsOnly && !ref.ref.startsWith("refs/tags/")) continue;
+				if (headsOnly && !ref.ref.startsWith("refs/heads/")) continue;
+				io.out.push(`${ref.oid}\t${ref.ref}\n`);
+				if (ref.peeled) io.out.push(`${ref.peeled}\t${ref.ref}^{}\n`);
+			}
 			return 0;
 		}
 		case "show-ref": {
