@@ -68,7 +68,7 @@ tools that are unsafe to replay are reported to the model as interrupted instead
 
 Switch to pi-durable, pinned, and keep compatibility at the level of files rather than sessions:
 
-- Engine: durable Harness with SQLite storage (Swift sqlite3 adapter) or JSONL.
+- Engine: durable Harness with JSONL storage (files; SQLite was considered and dropped, see PRINCIPLES.md).
 - Environment: a pico `ExecutionEnv` implemented directly on the Swift host (no Node shims needed in the hot path);
   `bash` through ios_system, later a remote sandbox env (durable already models per-conversation environments).
 - Product layer as durable extensions: coding system prompt, AGENTS.md, skills, prompt templates, reusing coding-agent's
