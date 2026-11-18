@@ -149,6 +149,17 @@ HTTPS auth uses GITHUB_TOKEN (Settings > Tokens, Keychain). Clone verified on th
 
 The system prompt has an `environment` section listing what the shell can and cannot do.
 
+## TODO (later)
+
+- **Live command output.** just-bash returns a command's output only when it finishes, so a long command shows a
+  spinner and then everything at once, and output of a stopped or timed-out command is lost. Durable's
+  `ShellExecOptions.onOutput` and the app's tool cards already handle streamed chunks; the gap is just-bash's
+  `exec()`. Options: stream from just-bash's stdout internally, or let pico's own commands (git clone/fetch/push
+  progress) report through `onOutput` directly.
+- `tar z` / `gzip` in the shell need `CompressionStream` (host-backed via Apple's Compression framework).
+- Verify `git push` over HTTPS with a GitHub token on the device.
+- Trim the engine bundle (10.9 MiB: provider SDKs, just-bash extras like sql.js and HTML-to-markdown).
+
 ## Open questions / risks
 
 - Size and behavior of the Node shim layer (resolved by M0).
