@@ -434,6 +434,11 @@ export function futimesSync(fd: number, atime: number | Date, mtime: number | Da
 	utimesSync(fdEntry(fd).path, atime, mtime);
 }
 
+/** Reports the volume as a local APFS disk (pi uses this to pick a file watch strategy). */
+export function statfsSync(_path: PathLike): { type: number; bsize: number; blocks: number; bfree: number; bavail: number; files: number; ffree: number } {
+	return { type: 0x1a, bsize: 4096, blocks: 0, bfree: 0, bavail: 0, files: 0, ffree: 0 };
+}
+
 export function truncateSync(path: PathLike, length = 0): void {
 	const p = toPath(path);
 	const bytes = host.fs.readFile(p);
@@ -750,6 +755,7 @@ export const utimes = callbackify(utimesSync);
 export const lutimes = callbackify(lutimesSync);
 export const futimes = callbackify(futimesSync);
 export const truncate = callbackify(truncateSync);
+export const statfs = callbackify(statfsSync);
 export const ftruncate = callbackify(ftruncateSync);
 export const open = callbackify(openSync);
 export const close = callbackify(closeSync);
@@ -865,6 +871,7 @@ export const promises = {
 	utimes: asyncify(utimesSync),
 	lutimes: asyncify(lutimesSync),
 	truncate: asyncify(truncateSync),
+	statfs: asyncify(statfsSync),
 	open: async (path: PathLike, flags?: string | number, mode?: number) => new FileHandle(openSync(path, flags, mode)),
 	opendir: async (path: PathLike) => {
 		const entries = readdirSync(path, { withFileTypes: true }) as Dirent[];
@@ -920,6 +927,8 @@ export default {
 	lutimesSync,
 	futimesSync,
 	truncateSync,
+	statfsSync,
+	statfs,
 	openSync,
 	closeSync,
 	fsyncSync,

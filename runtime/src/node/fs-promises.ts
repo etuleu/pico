@@ -27,6 +27,7 @@ export const {
 	utimes,
 	lutimes,
 	truncate,
+	statfs,
 	open,
 	opendir,
 	watch,

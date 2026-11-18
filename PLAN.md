@@ -99,6 +99,11 @@ Known gaps found in M0 (to address in M1/M2):
 - grep / find tools spawn `rg` / `fd`: need JS or host implementations on iOS (`GrepOperations`, `FindOperations`).
 - Bundle size: jiti (2.3 MiB), highlight.js (1.5 MiB), google-genai / auth could be trimmed or lazy-loaded.
 
+### Engine decision (pending)
+
+pi-durable was evaluated as an alternative engine; see `docs/durable-evaluation.md`. Recommendation: switch to durable,
+keep file-format compatibility (AGENTS.md, skills, models.json), drop session-file and CLI-extension compatibility.
+
 ## Open questions / risks
 
 - Size and behavior of the Node shim layer (resolved by M0).
