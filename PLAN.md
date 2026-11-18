@@ -171,6 +171,9 @@ The system prompt has an `environment` section listing what the shell can and ca
   whole list. Ideas: send only the newest window of items plus "load earlier" (durable's `ConversationTranscript`
   already supports windows and gaps), send item diffs instead of full lists, cap rendered tool output, and rely on
   durable's compaction for model context. Measure first with a long session on the phone.
+- **Markdown rendering.** `MarkdownText` (app/Sources/Views/ItemViews.swift) handles inline markdown and fenced code
+  only. Add block-level parsing: headings, bullet / numbered lists (nested), block quotes, horizontal rules, tables
+  (horizontally scrollable). Small native SwiftUI parser, no dependency.
 - Trim the engine bundle (10.9 MiB: provider SDKs, just-bash extras like sql.js and HTML-to-markdown).
 
 ## Open questions / risks
