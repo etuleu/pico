@@ -13,7 +13,8 @@ struct SessionListView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(session.title)
                             .lineLimit(2)
-                        Text(Date(timeIntervalSince1970: session.updatedAt / 1000), style: .relative)
+                        // Static ("5 min. ago", "yesterday"); the `.relative` style ticks every second like a timer.
+                        Text(Date(timeIntervalSince1970: session.updatedAt / 1000).formatted(.relative(presentation: .named, unitsStyle: .abbreviated)))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

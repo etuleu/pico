@@ -158,6 +158,11 @@ The system prompt has an `environment` section listing what the shell can and ca
   progress) report through `onOutput` directly.
 - `tar z` / `gzip` in the shell need `CompressionStream` (host-backed via Apple's Compression framework).
 - Verify `git push` over HTTPS with a GitHub token on the device.
+- **Run JavaScript.** A pico `node` command in the shell: each run gets a fresh JavaScriptCore context on its own
+  thread, with pico's prelude and Node shims (fs on real files, path, fetch, Buffer, timers, process.argv), `node -e`,
+  `node script.js`, CommonJS `require` of local files. Later: ES modules (transform), plain-JS packages from
+  node_modules. Caveat: JSC has no public API to interrupt running code, so a timed-out script is abandoned on its
+  thread. just-bash's `js-exec` (QuickJS in WASM + worker threads) is the alternative; unlikely to work on iOS as is.
 - Trim the engine bundle (10.9 MiB: provider SDKs, just-bash extras like sql.js and HTML-to-markdown).
 
 ## Open questions / risks
