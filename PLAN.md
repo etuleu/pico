@@ -163,6 +163,9 @@ The system prompt has an `environment` section listing what the shell can and ca
   `node script.js`, CommonJS `require` of local files. Later: ES modules (transform), plain-JS packages from
   node_modules. Caveat: JSC has no public API to interrupt running code, so a timed-out script is abandoned on its
   thread. just-bash's `js-exec` (QuickJS in WASM + worker threads) is the alternative; unlikely to work on iOS as is.
+- **Export a chat as Markdown.** Sessions are stored in durable's commit-log format (`sessions/<id>/store/*.jsonl`),
+  which is hard to read. Add an export (share sheet / write into the workspace) that renders the transcript as
+  Markdown: user and assistant messages, tool calls with arguments and output, model and cost.
 - Trim the engine bundle (10.9 MiB: provider SDKs, just-bash extras like sql.js and HTML-to-markdown).
 
 ## Open questions / risks
