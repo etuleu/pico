@@ -1,6 +1,8 @@
 # pico: pi on iPhone
 
 Goal: run the pi coding agent (https://github.com/earendil-works/pi) natively on iPhone.
+
+See `PRINCIPLES.md` for how we build it (files like Linux, keep it simple, user first, no concentration of power).
 No laptop or server dependency. Personal use first; App Store later if it proves useful.
 
 ## Requirements
@@ -124,7 +126,9 @@ Layout:
 Runs on a real iPhone 17 Pro Max (team D3RVDPR3J3, bundle id `com.etuleu.pico`): `app/run-device.sh`. Engine startup
 on the device: prelude 22 ms, engine.js 73 ms. Engine log: `Library/Caches/engine.log` in the app container.
 
-Remaining for M1: better markdown (lists, headings, tables), SQLite storage,
+Storage stays files (durable's JSONL storage, one directory per session); no SQLite until files clearly fail us.
+
+Remaining for M1: better markdown (lists, headings, tables),
 trim provider SDKs from the bundle (5.8 MiB), session rename, files browser.
 
 ## Open questions / risks
