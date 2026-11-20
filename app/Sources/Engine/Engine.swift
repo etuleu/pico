@@ -294,10 +294,13 @@ final class Engine {
             }
         case "preview":
             if let requestId = envelope.requestId, let path = envelope.path {
-                if preview?.requestId != nil, let previous = preview?.requestId {
-                    answerPreview(requestId: previous, logs: [])
+                if let previous = preview?.requestId { answerPreview(requestId: previous, logs: []) }
+                if preview?.path == path {
+                    // Already showing: the screen reloads and answers (see PreviewScreen).
+                    preview?.requestId = requestId
+                } else {
+                    preview = PreviewState(path: path, requestId: requestId)
                 }
-                preview = PreviewState(path: path, requestId: requestId)
             }
         case "error":
             lastError = envelope.message

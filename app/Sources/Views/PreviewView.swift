@@ -131,19 +131,23 @@ struct PreviewScreen: View {
     let preview: PreviewState
     @State private var controller = PreviewController()
     @State private var chromeVisible = true
+    @State private var stamp = Date.distantPast
 
     private var folder: String { (preview.path as NSString).deletingLastPathComponent }
 
-    /// Changes whenever the agent finished writing or editing a file in the app's folder.
-    private var revision: String {
-        guard let items = engine.view?.items else { return "" }
-        let folderName = (folder as NSString).lastPathComponent
-        return items.compactMap { item -> String? in
-            guard case let .tool(id, _, name, args, status, _) = item, name == "write" || name == "edit", status == .done,
-                  let path = args["path"]?.string else { return nil }
-            let absolute = path.hasPrefix("/") ? path : (engine.workspace as NSString).appendingPathComponent(path)
-            return absolute.hasPrefix(folder) || absolute.contains("/\(folderName)/") ? id : nil
-        }.joined(separator: ",")
+    /// Latest modification time of any file in the app's folder (any tool may change it: write, edit, bash).
+    private func folderStamp() -> Date {
+        let fm = FileManager.default
+        guard let enumerator = fm.enumerator(at: URL(fileURLWithPath: folder), includingPropertiesForKeys: [.contentModificationDateKey]) else {
+            return .distantPast
+        }
+        var latest = Date.distantPast
+        for case let url as URL in enumerator {
+            if let date = try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate, date > latest {
+                latest = date
+            }
+        }
+        return latest
     }
 
     var body: some View {
@@ -173,22 +177,38 @@ struct PreviewScreen: View {
         .onAppear {
             controller.onLoaded = { answerSoon() }
             controller.load(preview.path)
+            stamp = folderStamp()
         }
-        .onChange(of: revision) { _, _ in controller.reload() }
+        // The agent asked again for the app that is already showing: reload and answer the new request.
+        .onChange(of: engine.preview?.requestId) { _, requestId in
+            if requestId != nil { controller.reload() }
+        }
+        // Reload when files change, whichever tool changed them.
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                let latest = folderStamp()
+                if latest > stamp {
+                    stamp = latest
+                    controller.reload()
+                }
+            }
+        }
         .onTapGesture(count: 3) { withAnimation { chromeVisible.toggle() } }
     }
 
     /// Lets the page run for a moment, then reports its console output to the agent (once per request).
     private func answerSoon() {
-        guard preview.requestId != nil else { return }
+        guard engine.preview?.requestId != nil else { return }
         Task {
             try? await Task.sleep(for: .seconds(2))
             answer()
         }
     }
 
+    /// Answers the engine's current request, if any, with the page's console output.
     private func answer() {
-        guard let requestId = preview.requestId else { return }
+        guard let requestId = engine.preview?.requestId else { return }
         engine.answerPreview(requestId: requestId, logs: controller.logs)
         engine.preview?.requestId = nil
     }
