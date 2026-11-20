@@ -9,6 +9,7 @@ struct SessionViewState: Equatable {
     var items: [Item] = []
     var live: LiveState?
     var busy = false
+    var runStartedAt: Date?
     var failure: ViewEvent.Failure?
     var model: SessionInfo.ModelRef?
     var thinkingLevel: String?
@@ -314,6 +315,7 @@ final class Engine {
         if let items = event.items { state.items = items }
         state.live = event.live
         state.busy = event.busy
+        state.runStartedAt = event.runStartedAt.map { Date(timeIntervalSince1970: $0 / 1000) }
         state.failure = event.failure
         state.model = event.model ?? state.model
         state.thinkingLevel = event.thinkingLevel ?? state.thinkingLevel

@@ -143,12 +143,16 @@ export class OpenSession {
 		if (busy !== (this.meta.running ?? false)) {
 			this.meta.running = busy;
 			this.meta.updatedAt = Date.now();
+			// Kept in meta.json so the app's elapsed-time display survives navigation and restarts.
+			if (busy) this.meta.runStartedAt = Date.now();
+			else delete this.meta.runStartedAt;
 			this.options.store.write(this.meta);
 		}
 		this.options.emit({
 			type: "view",
 			sessionId: this.meta.id,
 			busy,
+			...(busy && this.meta.runStartedAt ? { runStartedAt: this.meta.runStartedAt } : {}),
 			...(changed ? { items: this.transcript.items } : {}),
 			live: liveOf(live),
 			...(live?.runFailure ? { failure: { reason: live.runFailure.reason, detail: live.runFailure.detail } } : {}),

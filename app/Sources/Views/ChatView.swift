@@ -64,7 +64,7 @@ struct ChatView: View {
                         FailureView(failure: failure)
                     }
                     if state?.busy == true, state?.live?.text == nil {
-                        WorkingIndicator(retry: state?.live?.retry?.error)
+                        WorkingIndicator(startedAt: state?.runStartedAt, retry: state?.live?.retry?.error)
                     }
                     Color.clear.frame(height: 1).id("bottom")
                 }
@@ -129,14 +129,17 @@ struct ChatView: View {
 
 /// "Working… 0:42" while a run has nothing to stream (e.g. a provider that sends a big tool call in one piece).
 struct WorkingIndicator: View {
+    /// The run's start from the engine; falls back to when the indicator appeared.
+    let startedAt: Date?
     let retry: String?
-    @State private var started = Date()
+    @State private var appeared = Date()
 
     var body: some View {
+        let started = startedAt ?? appeared
         HStack(spacing: 8) {
             ProgressView()
             TimelineView(.periodic(from: started, by: 1)) { context in
-                let seconds = Int(context.date.timeIntervalSince(started))
+                let seconds = max(0, Int(context.date.timeIntervalSince(started)))
                 Text(retry.map { "Retrying: \($0)" } ?? "Working… \(seconds / 60):\(String(format: "%02d", seconds % 60))")
                     .font(.footnote.monospacedDigit())
                     .foregroundStyle(.secondary)

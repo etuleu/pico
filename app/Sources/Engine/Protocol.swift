@@ -174,6 +174,8 @@ struct ViewEvent: Codable {
 
     var sessionId: String
     var busy: Bool
+    /// When the current run started (ms since epoch); present while busy.
+    var runStartedAt: Double?
     var items: [Item]?
     var live: LiveState?
     var failure: Failure?

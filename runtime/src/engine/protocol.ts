@@ -32,6 +32,8 @@ export interface SessionInfo {
 	model?: { provider: string; modelId: string };
 	/** A run was in progress when the session was last seen; opening the session continues it. */
 	running?: boolean;
+	/** When the current run started (ms since epoch). */
+	runStartedAt?: number;
 }
 
 export interface ModelInfo {
@@ -62,6 +64,8 @@ export interface ViewEvent {
 	type: "view";
 	sessionId: string;
 	busy: boolean;
+	/** When the current run started (ms since epoch); present while busy. */
+	runStartedAt?: number;
 	items?: Item[];
 	/** The in-flight assistant message and running tools of the current round. */
 	live?: {
