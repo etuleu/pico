@@ -117,6 +117,19 @@ export function liveOf(live: LiveState | undefined) {
 	if (!live) return undefined;
 	const message = live.generation?.message as AssistantMessage | undefined;
 	const parts = message ? assistantParts(message) : undefined;
+	// Tool calls the model is still writing (streamed arguments). Large string arguments (file contents) are sent as
+	// their size only, so a 30 KB write does not travel to the app on every update.
+	const writing: Item[] = [];
+	if (message && !live.tools?.length) {
+		for (const part of message.content) {
+			if (part.type !== "toolCall") continue;
+			const args: Record<string, unknown> = {};
+			for (const [key, value] of Object.entries((part.arguments ?? {}) as Record<string, unknown>)) {
+				args[key] = typeof value === "string" && value.length > 300 ? { size: new TextEncoder().encode(value).length } : value;
+			}
+			writing.push({ kind: "tool", id: `writing:${part.id}`, callId: part.id, name: part.name, args, status: "pending" });
+		}
+	}
 	const tools: Item[] = (live.tools ?? []).map((slot) => ({
 		kind: "tool",
 		id: slot.callId,
@@ -130,6 +143,7 @@ export function liveOf(live: LiveState | undefined) {
 		...(parts?.text ? { text: parts.text } : {}),
 		...(parts?.thinking ? { thinking: parts.thinking } : {}),
 		tools,
+		...(writing.length ? { writing } : {}),
 		...(live.generation?.retry ? { retry: live.generation.retry } : {}),
 	};
 }

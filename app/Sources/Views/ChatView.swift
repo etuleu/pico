@@ -27,6 +27,10 @@ struct ChatView: View {
             ToolbarItem(placement: .topBarTrailing) { ModelMenu(state: state) }
         }
         .task(id: sessionId) { await engine.openSession(sessionId) }
+        .fullScreenCover(item: Binding(get: { engine.preview }, set: { engine.preview = $0 })) { preview in
+            PreviewScreen(preview: preview)
+                .environment(engine)
+        }
     }
 
     // MARK: Transcript
@@ -60,13 +64,7 @@ struct ChatView: View {
                         FailureView(failure: failure)
                     }
                     if state?.busy == true, state?.live?.text == nil {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                            Text(state?.live?.retry.map { "Retrying: \($0.error)" } ?? "Working…")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                        }
+                        WorkingIndicator(retry: state?.live?.retry?.error)
                     }
                     Color.clear.frame(height: 1).id("bottom")
                 }
@@ -126,6 +124,25 @@ struct ChatView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
+    }
+}
+
+/// "Working… 0:42" while a run has nothing to stream (e.g. a provider that sends a big tool call in one piece).
+struct WorkingIndicator: View {
+    let retry: String?
+    @State private var started = Date()
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+            TimelineView(.periodic(from: started, by: 1)) { context in
+                let seconds = Int(context.date.timeIntervalSince(started))
+                Text(retry.map { "Retrying: \($0)" } ?? "Working… \(seconds / 60):\(String(format: "%02d", seconds % 60))")
+                    .font(.footnote.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+        }
     }
 }
 

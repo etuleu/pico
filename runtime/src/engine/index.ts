@@ -13,6 +13,8 @@ import type { Command, Event, ModelInfo, Response } from "./protocol.ts";
 import { OpenSession, SessionStore } from "./session.ts";
 import { PicoExecutionEnv } from "./shell-env.ts";
 import { WebTools } from "./web.ts";
+import { PreviewTools } from "./preview.ts";
+import { answerUi, connectUi } from "./ui-bridge.ts";
 
 const VERSION = "0.1.0";
 
@@ -34,6 +36,7 @@ registry.install(CodingTools);
 registry.install(createCodingExtension({ agentDir, platform: process.env.PICO_PLATFORM || "iOS" }));
 // Tools only agents use (listed in their files); hidden from the main conversation below.
 registry.install(WebTools);
+registry.install(PreviewTools);
 const agents = loadAgents(agentDir, log);
 registry.install(createAgentsExtension(agents, registry, log));
 let models: MutableModels = loadModels(agentDir, log);
@@ -149,6 +152,9 @@ async function handle(command: Command): Promise<unknown> {
 		case "set_thinking":
 			await requireSession().configure({ thinkingLevel: command.level });
 			return undefined;
+		case "preview_result":
+			answerUi(command.requestId, { shown: command.shown, logs: command.logs, error: command.error });
+			return undefined;
 		case "set_env":
 			if (command.value === null) delete process.env[command.name];
 			else process.env[command.name] = command.value;
@@ -197,4 +203,5 @@ process.stdin.on("end", () => {
 	});
 });
 
+connectUi(send);
 send({ type: "ready", version: VERSION });

@@ -51,7 +51,46 @@ struct LiveView: View {
         VStack(alignment: .leading, spacing: 6) {
             if let thinking = live.thinking, !thinking.isEmpty { ThinkingView(text: thinking) }
             if let text = live.text, !text.isEmpty { MarkdownText(text: text) }
+            ForEach(live.writing ?? []) { item in
+                if case let .tool(_, _, name, args, _, _) = item { WritingCard(name: name, args: args) }
+            }
         }
+    }
+}
+
+/// A tool call the model is still writing, e.g. "write apps/life/index.html · 12.4 KB".
+struct WritingCard: View {
+    let name: String
+    let args: JSONValue
+
+    private var detail: String {
+        var parts: [String] = []
+        if let path = args["path"]?.string { parts.append(path) }
+        if case let .object(object) = args {
+            let bytes = object.values.compactMap { value -> Double? in
+                if case let .number(size)? = value["size"] { return size }
+                if case let .string(text) = value { return Double(text.utf8.count) }
+                return nil
+            }.reduce(0, +)
+            if bytes > 0 { parts.append(ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)) }
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ProgressView().controlSize(.small)
+            Text(name).font(.footnote.monospaced().weight(.semibold))
+            Text(detail)
+                .font(.footnote.monospaced())
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .contentTransition(.numericText())
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
     }
 }
 
@@ -137,8 +176,27 @@ struct ToolCard: View {
         }
     }
 
+    /// The file a finished `preview` call showed ("Showing <path> to the user.").
+    private var previewPath: String? {
+        guard name == "preview", status == .done, let output,
+              let match = output.firstMatch(of: /Showing (.+?) to the user\./) else { return nil }
+        return String(match.1)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            if let previewPath {
+                Button {
+                    engine.openPreview(previewPath)
+                } label: {
+                    Label("Open \((previewPath as NSString).deletingLastPathComponent.split(separator: "/").last.map(String.init) ?? "app")", systemImage: "play.rectangle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.borderedProminent)
+                .padding([.horizontal, .top], 10)
+            }
             Button {
                 withAnimation(.snappy) { expanded.toggle() }
             } label: {

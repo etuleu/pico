@@ -31,6 +31,8 @@ final class Engine {
     private(set) var workspace = ""
     private(set) var logs: [String] = []
     var lastError: String?
+    /// The web app preview being shown (full screen), if any.
+    var preview: PreviewState?
 
     let paths: AppPaths
     private var runtime: PicoRuntime?
@@ -191,6 +193,18 @@ final class Engine {
         }
     }
 
+    // MARK: - Preview
+
+    /// Answers the engine's `preview` request with the page's console output.
+    func answerPreview(requestId: String, logs: [String]) {
+        Task { try? await send(["type": "preview_result", "requestId": requestId, "shown": true, "logs": logs]) }
+    }
+
+    /// Reopens a preview from the transcript (no answer to the agent needed).
+    func openPreview(_ path: String) {
+        preview = PreviewState(path: path, requestId: nil)
+    }
+
     // MARK: - Background execution
 
     /// While a run is going, ask iOS for background time so a short switch away does not interrupt it.
@@ -248,6 +262,8 @@ final class Engine {
         var error: String?
         var message: String?
         var sessions: [SessionInfo]?
+        var requestId: String?
+        var path: String?
     }
 
     private func handle(_ line: String) {
@@ -275,6 +291,13 @@ final class Engine {
                 apply(try JSONDecoder().decode(ViewEvent.self, from: data))
             } catch {
                 appendLog("[engine] bad view: \(error)")
+            }
+        case "preview":
+            if let requestId = envelope.requestId, let path = envelope.path {
+                if preview?.requestId != nil, let previous = preview?.requestId {
+                    answerPreview(requestId: previous, logs: [])
+                }
+                preview = PreviewState(path: path, requestId: requestId)
             }
         case "error":
             lastError = envelope.message

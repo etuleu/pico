@@ -84,6 +84,16 @@ export function createCodingExtension(options: { agentDir: string; platform: str
 					"Past pico chat sessions are in ~/.pi/pico/sessions/<id>/ (meta.json has the title; store/*.jsonl holds the transcript); search them when the user refers to earlier chats.",
 				].join("\n");
 			}),
+			section("apps", (input) => {
+				if (!input.agent.tools.some((tool) => tool.name === "preview")) return undefined;
+				return [
+					"You can build small web apps, games, animations and visualizations that run right on the user's phone:",
+					"- Put each app in its own folder, apps/<name>/, with one self-contained index.html (inline CSS and JS, no build step). Plain JavaScript with canvas, SVG or DOM; CDN libraries only if really needed.",
+					"- Design for a phone held in portrait: full-screen, touch input (pointer events), no hover, respect safe areas (env(safe-area-inset-*)), crisp on retina (devicePixelRatio), 60 fps with requestAnimationFrame.",
+					"- Make it beautiful: thoughtful colors, smooth motion, small details. It is meant to delight.",
+					"- After writing or changing it, call preview with the folder. It shows the app full screen and returns console errors; fix errors and preview again. The preview reloads by itself when the files change.",
+				].join("\n");
+			}),
 			section("project_context", (input) => {
 				const files = loadContextFiles(input.env?.cwd ?? input.agent.cwd ?? "/", options.agentDir);
 				if (files.length === 0) return undefined;

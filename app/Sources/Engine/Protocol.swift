@@ -155,6 +155,8 @@ struct LiveState: Codable, Hashable {
     var text: String?
     var thinking: String?
     var tools: [Item]
+    /// Tool calls the model is still writing (big string arguments arrive as `{ "size": bytes }`).
+    var writing: [Item]?
     var retry: Retry?
 }
 

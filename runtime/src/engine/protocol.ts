@@ -13,7 +13,9 @@ export type Command =
 	| { type: "list_models"; id?: string }
 	| { type: "set_model"; id?: string; provider: string; modelId: string }
 	| { type: "set_thinking"; id?: string; level: ThinkingLevel }
-	| { type: "set_env"; id?: string; name: string; value: string | null };
+	| { type: "set_env"; id?: string; name: string; value: string | null }
+	/** The app's answer to a `preview` event. */
+	| { type: "preview_result"; id?: string; requestId: string; shown: boolean; logs: string[]; error?: string };
 
 export type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
@@ -62,7 +64,14 @@ export interface ViewEvent {
 	busy: boolean;
 	items?: Item[];
 	/** The in-flight assistant message and running tools of the current round. */
-	live?: { text?: string; thinking?: string; tools: Item[]; retry?: { at: number; error: string } };
+	live?: {
+		text?: string;
+		thinking?: string;
+		tools: Item[];
+		/** Tool calls the model is still writing; big string arguments are replaced by `{ size }` in bytes. */
+		writing?: Item[];
+		retry?: { at: number; error: string };
+	};
 	failure?: { reason: string; detail?: string };
 	model?: { provider: string; modelId: string };
 	thinkingLevel?: ThinkingLevel;
@@ -73,4 +82,6 @@ export type Event =
 	| ViewEvent
 	| { type: "sessions"; sessions: SessionInfo[] }
 	| { type: "error"; message: string }
+	/** Show a web page (absolute path to an .html file); answer with `preview_result`. */
+	| { type: "preview"; requestId: string; path: string }
 	| { type: "ready"; version: string };
