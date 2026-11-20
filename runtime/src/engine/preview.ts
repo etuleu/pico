@@ -25,13 +25,20 @@ const previewTool = defineTool({
 		if (!existsSync(file)) {
 			return { output: [{ type: "text", text: `Not found: ${file}` }], isError: true };
 		}
+		// Without an app UI (pico-cli, tests) there is nothing to show; say so at once so the model does not retry.
+		if (process.env.PICO_HEADLESS === "1") {
+			return { output: [{ type: "text", text: `${file} is ready. (No screen here: the user will open it from the app.)` }] };
+		}
 		const result = await askUi<PreviewResult>(
 			(requestId) => ({ type: "preview", requestId, path: file }),
 			{ shown: false, logs: [], error: "The app did not answer (no preview available here)." },
 			20_000,
 		);
 		if (!result.shown) {
-			return { output: [{ type: "text", text: `Preview failed: ${result.error ?? "unknown error"}` }], isError: true };
+			return {
+				output: [{ type: "text", text: `Preview not shown: ${result.error ?? "unknown error"} The app is saved; do not retry, the user can open it later.` }],
+				isError: true,
+			};
 		}
 		const errors = result.logs.filter((line) => line.startsWith("[error]"));
 		const console =
