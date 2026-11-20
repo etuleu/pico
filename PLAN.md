@@ -164,6 +164,21 @@ agents folder does not exist. Verified on the iPhone (fetch fallback without a P
 Later: `context: fork` frontmatter (child starts from the parent's history), project agents (`.pi/agents`), showing a
 child's steps in the tool card, counting a child's usage in the parent.
 
+### Apps (web app previews) — for demos
+
+The agent builds small web apps (games, animations, visualizations) as plain folders, `apps/<name>/index.html` in
+the workspace, and calls the `preview` tool (`runtime/src/engine/preview.ts`): the app shows it full screen in a
+WKWebView (`app/Sources/Views/PreviewView.swift`), captures `console` and uncaught errors for a moment and sends them
+back to the agent (`ui-bridge.ts`: engine asks the UI, the UI answers with `preview_result`), so the agent fixes its
+own runtime errors. The preview reloads when any file in the app folder changes. Finished preview cards have an
+"Open" button. Triple-tap hides the controls (clean screen recordings). Motion sensors are allowed (tilt demos).
+
+Demos built on the iPhone with Inkling-2-Small: `apps/microduck` (Hugging Face's robot duck learning tricks),
+`apps/life` (glowing Game of Life), `apps/meadow` (cat, butterflies, sky by time of day). 1 to 2 minutes each.
+
+Finding: DeepInfra sends tool-call arguments in one piece at the end (all models), so there is no live progress
+while a file is written; the chat shows elapsed time instead.
+
 ## TODO (later)
 
 - **Live command output.** just-bash returns a command's output only when it finishes, so a long command shows a
