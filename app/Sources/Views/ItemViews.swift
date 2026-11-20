@@ -49,7 +49,7 @@ struct LiveView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if let thinking = live.thinking, !thinking.isEmpty { ThinkingView(text: thinking) }
+            if let thinking = live.thinking, !thinking.isEmpty { ThinkingView(text: thinking, live: true) }
             if let text = live.text, !text.isEmpty { MarkdownText(text: text) }
             ForEach(live.writing ?? []) { item in
                 if case let .tool(_, _, name, args, _, _) = item { WritingCard(name: name, args: args) }
@@ -94,21 +94,54 @@ struct WritingCard: View {
     }
 }
 
+/// Collapsible reasoning. Expanded, it scrolls inside a fixed-height box and renders only the tail of long text:
+/// reasoning can run to tens of thousands of characters and, while live, changes about ten times a second.
 struct ThinkingView: View {
     let text: String
+    var live = false
     @State private var expanded = false
 
+    private static let maxShown = 6_000
+
+    private var shown: String {
+        text.count > Self.maxShown ? "…" + String(text.suffix(Self.maxShown)) : text
+    }
+
     var body: some View {
-        DisclosureGroup(isExpanded: $expanded) {
-            Text(text)
+        VStack(alignment: .leading, spacing: 6) {
+            Button {
+                withAnimation(.snappy) { expanded.toggle() }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "brain")
+                    Text(live ? "Thinking…" : "Thinking")
+                    if text.count > Self.maxShown {
+                        Text("· \(text.count / 1000)k chars").foregroundStyle(.tertiary)
+                    }
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .rotationEffect(.degrees(expanded ? 90 : 0))
+                }
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        } label: {
-            Label("Thinking", systemImage: "brain")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if expanded {
+                ScrollView {
+                    Text(shown)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(10)
+                }
+                .frame(maxHeight: 220)
+                .defaultScrollAnchor(live ? .bottom : .top)
+                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
+            }
         }
     }
 }
