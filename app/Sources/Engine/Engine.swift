@@ -196,9 +196,11 @@ final class Engine {
 
     // MARK: - Preview
 
-    /// Answers the engine's `preview` request with the page's console output.
-    func answerPreview(requestId: String, logs: [String]) {
-        Task { try? await send(["type": "preview_result", "requestId": requestId, "shown": true, "logs": logs]) }
+    /// Answers the engine's `preview` request with the page's console output and, when available, a JPEG screenshot.
+    func answerPreview(requestId: String, logs: [String], screenshot: String? = nil) {
+        var message: [String: Any] = ["type": "preview_result", "requestId": requestId, "shown": true, "logs": logs]
+        if let screenshot { message["screenshot"] = screenshot }
+        Task { try? await send(message) }
     }
 
     /// Reopens a preview from the transcript (no answer to the agent needed).

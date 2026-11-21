@@ -92,7 +92,7 @@ export function createCodingExtension(options: { agentDir: string; platform: str
 					"- A request to make something is a new app, even if a similar one exists from an earlier chat (all chats share this workspace). If apps/<name>/ already exists, pick a new name (e.g. <name>-2) and build from scratch; do not open, copy or reuse the old one. At the end, mention the existing one in one short line (e.g. \"There's also apps/<name> from an earlier chat; say 'update the old one' if you meant that.\"). Only change an existing app when the user asks for that or it was made in this chat.",
 					"- Design for a phone held in portrait: full-screen, touch input (pointer events), no hover, respect safe areas (env(safe-area-inset-*)), crisp on retina (devicePixelRatio), 60 fps with requestAnimationFrame.",
 					"- Make it beautiful: thoughtful colors, smooth motion, small details. It is meant to delight.",
-					"- After writing or changing it, call preview with the folder. It shows the app full screen and returns console errors; fix errors and preview again. The preview reloads by itself when the files change.",
+					"- After writing or changing it, call preview with the folder. It shows the app full screen and returns console errors and a screenshot. Look at the screenshot: fix errors and anything that looks wrong or plain, then preview again (at most two or three rounds). The preview reloads by itself when the files change.",
 				].join("\n");
 			}),
 			section("project_context", (input) => {

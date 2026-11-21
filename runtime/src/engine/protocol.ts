@@ -15,7 +15,16 @@ export type Command =
 	| { type: "set_thinking"; id?: string; level: ThinkingLevel }
 	| { type: "set_env"; id?: string; name: string; value: string | null }
 	/** The app's answer to a `preview` event. */
-	| { type: "preview_result"; id?: string; requestId: string; shown: boolean; logs: string[]; error?: string };
+	| {
+			type: "preview_result";
+			id?: string;
+			requestId: string;
+			shown: boolean;
+			logs: string[];
+			/** JPEG of the page as shown, base64. */
+			screenshot?: string;
+			error?: string;
+	  };
 
 export type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
 

@@ -206,11 +206,18 @@ struct PreviewScreen: View {
         }
     }
 
-    /// Answers the engine's current request, if any, with the page's console output.
+    /// Answers the engine's current request, if any, with the page's console output and a screenshot, so the agent
+    /// can see what it built.
     private func answer() {
         guard let requestId = engine.preview?.requestId else { return }
-        engine.answerPreview(requestId: requestId, logs: controller.logs)
         engine.preview?.requestId = nil
+        let logs = controller.logs
+        let config = WKSnapshotConfiguration()
+        config.snapshotWidth = 390
+        controller.webView.takeSnapshot(with: config) { image, _ in
+            let jpeg = image?.jpegData(compressionQuality: 0.6)
+            engine.answerPreview(requestId: requestId, logs: logs, screenshot: jpeg?.base64EncodedString())
+        }
     }
 
     private func close() {

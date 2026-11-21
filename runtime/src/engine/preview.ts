@@ -10,13 +10,15 @@ export interface PreviewResult {
 	shown: boolean;
 	/** Console lines and uncaught errors from the first seconds after load. */
 	logs: string[];
+	/** JPEG of the page as shown, base64. */
+	screenshot?: string;
 	error?: string;
 }
 
 const previewTool = defineTool({
 	name: "preview",
 	description:
-		"Show a web app to the user full screen on their phone: pass an .html file or a folder containing index.html. The page reloads whenever its files change. Returns the page's console output and errors from the first seconds after loading; fix any errors and call preview again.",
+		"Show a web app to the user full screen on their phone: pass an .html file or a folder containing index.html. The page reloads whenever its files change. Returns the page's console output and errors from the first seconds after loading, and a screenshot of how it looks. Fix errors and visible problems (layout, overlap, empty areas, contrast), then call preview again.",
 	parameters: obj({ path: str({ description: "Path to an .html file or a folder with index.html" }) }),
 	execute: async ({ path }, api) => {
 		const base = api.env?.cwd ?? process.cwd();
@@ -43,12 +45,13 @@ const previewTool = defineTool({
 		const errors = result.logs.filter((line) => line.startsWith("[error]"));
 		const console =
 			result.logs.length === 0 ? "No console output." : `Console (first seconds):\n${result.logs.slice(0, 50).join("\n")}`;
+		const text = `Showing ${file} to the user.${errors.length ? ` ${errors.length} error(s) — fix them.` : ""}\n${console}${
+			result.screenshot ? "\nScreenshot of the page as the user sees it (about 2 seconds after loading) follows." : ""
+		}`;
 		return {
 			output: [
-				{
-					type: "text",
-					text: `Showing ${file} to the user.${errors.length ? ` ${errors.length} error(s) — fix them.` : ""}\n${console}`,
-				},
+				{ type: "text", text },
+				...(result.screenshot ? [{ type: "image" as const, data: result.screenshot, mimeType: "image/jpeg" }] : []),
 			],
 			details: { path: file },
 		};

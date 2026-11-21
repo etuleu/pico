@@ -195,7 +195,12 @@ async function handle(command: Command): Promise<unknown> {
 			await requireSession().configure({ thinkingLevel: command.level });
 			return undefined;
 		case "preview_result":
-			answerUi(command.requestId, { shown: command.shown, logs: command.logs, error: command.error });
+			answerUi(command.requestId, {
+				shown: command.shown,
+				logs: command.logs,
+				screenshot: command.screenshot,
+				error: command.error,
+			});
 			return undefined;
 		case "set_env":
 			if (command.value === null) delete process.env[command.name];
