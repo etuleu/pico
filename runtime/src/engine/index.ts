@@ -4,9 +4,9 @@ import { writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { MutableModels } from "@earendil-works/pi-ai";
-import { createRegistry } from "@earendil-works/pi-durable";
+import { createRegistry, defineExtension, hook, section, ToolTask } from "@earendil-works/pi-durable";
 import { CodingTools } from "@earendil-works/pi-durable/tools";
-import { createAgentsExtension, loadAgents } from "./agents.ts";
+import { type AgentDefinition, agentsPromptSection, agentsSignature, createAgentsExtension, loadAgents } from "./agents.ts";
 import { createCodingExtension } from "./coding.ts";
 import { loadModels, loadSettings, type Settings } from "./config.ts";
 import type { Command, Event, ModelInfo, Response } from "./protocol.ts";
@@ -37,8 +37,50 @@ registry.install(createCodingExtension({ agentDir, platform: process.env.PICO_PL
 // Tools only agents use (listed in their files); hidden from the main conversation below.
 registry.install(WebTools);
 registry.install(PreviewTools);
-const agents = loadAgents(agentDir, log);
+let agents: AgentDefinition[] = loadAgents(agentDir, log);
+let agentsStamp = agentsSignature(agentDir);
 registry.install(createAgentsExtension(agents, registry, log));
+// Agent files are reloaded when they change, so an agent written in a chat is a tool on the very next request (durable
+// replaces an installed extension with the same name in place; work already running keeps its code). Checked after
+// every tool call (the agent's own writes) and every few seconds (edits from elsewhere, e.g. the Files app).
+function reloadAgentsIfChanged(): void {
+	const stamp = agentsSignature(agentDir);
+	if (stamp === agentsStamp) return;
+	agentsStamp = stamp;
+	agents = loadAgents(agentDir, log);
+	registry.install(createAgentsExtension(agents, registry, log));
+	log(`agents reloaded: ${agents.map((agent) => agent.name).join(", ") || "none"}`);
+}
+setInterval(reloadAgentsIfChanged, 5000);
+const agentToolNames = () =>
+	registry
+		.snapshot()
+		.tools()
+		.filter(({ extension }) => extension.name !== "pico-agents" && extension.name !== "pico-preview")
+		.map(({ tool }) => tool.name);
+registry.install(
+	defineExtension({
+		name: "pico-agent-builder",
+		sections: [
+			section("agents", (input) =>
+				agentsPromptSection(
+					agentDir,
+					() => agents,
+					agentToolNames,
+					input.agent.model ? `${input.agent.model.provider}/${input.agent.model.modelId}` : undefined,
+				),
+			),
+		],
+		hooks: [
+			hook(ToolTask, {
+				afterTool: (_call, result) => {
+					reloadAgentsIfChanged();
+					return result;
+				},
+			}),
+		],
+	}),
+);
 let models: MutableModels = loadModels(agentDir, log);
 let settings: Settings = loadSettings(agentDir);
 let current: OpenSession | undefined;

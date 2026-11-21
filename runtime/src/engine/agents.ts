@@ -2,7 +2,7 @@
 // for the main agent. Calling it runs a child conversation owned by the call, with the agent's model, tools and
 // instructions, and returns the child's final answer. The call parks while the child works, so an interrupted app
 // picks the work up again on the next launch.
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 import type { AssistantMessage } from "@earendil-works/pi-ai";
 import {
@@ -52,6 +52,20 @@ function parseAgentFile(path: string): AgentDefinition | string {
 	};
 }
 
+/** Changes whenever an agent file is added, removed or edited (names, sizes, modification times). */
+export function agentsSignature(agentDir: string): string {
+	const dir = join(agentDir, "agents");
+	if (!existsSync(dir)) return "";
+	return (readdirSync(dir) as string[])
+		.filter((name) => name.endsWith(".md"))
+		.sort()
+		.map((name) => {
+			const stat = statSync(join(dir, name));
+			return `${name}:${stat?.size}:${stat?.mtimeMs}`;
+		})
+		.join("|");
+}
+
 export function loadAgents(agentDir: string, log: (message: string) => void): AgentDefinition[] {
 	const dir = join(agentDir, "agents");
 	if (!existsSync(dir)) return [];
@@ -75,6 +89,33 @@ function textOf(message: AssistantMessage | undefined): string {
 		.map((part) => (part.type === "text" ? part.text : ""))
 		.join("")
 		.trim();
+}
+
+/** How the main agent can create agents: where they live, the format, what they can use, and which exist. */
+export function agentsPromptSection(
+	agentDir: string,
+	agents: () => AgentDefinition[],
+	toolNames: () => string[],
+	currentModel: string | undefined,
+): string {
+	const existing = agents();
+	return [
+		"You can create agents (specialized helpers that run in their own fresh context with their own model, tools and instructions). Do this when the user asks for an agent, or when a reusable specialist would help.",
+		`- An agent is one Markdown file: ${join(agentDir, "agents")}/<name>.md (use this absolute path).`,
+		"- Format: a frontmatter block, then the instructions (the agent's whole system prompt):",
+		"  ---",
+		"  name: snake_case_name      (becomes your tool name)",
+		"  description: what it does and when to use it (you will see this as the tool description)",
+		`  model: provider/modelId    (optional: leave it out to use the current model${currentModel ? `, ${currentModel}` : ""}; only set one the user asks for, and only models configured in models.json)`,
+		`  tools: comma-separated     (optional; omit for none. Available: ${toolNames().join(", ")})`,
+		"  ---",
+		"  Instructions: role, how to work, output format.",
+		"- A saved agent is a tool immediately: call it in your very next step, no waiting needed. It stays available in every chat. Edit or delete the file to change or remove it.",
+		"- When asked to build an agent, write the agent file; do not build a web app that imitates an agent.",
+		existing.length
+			? `Existing agents: ${existing.map((agent) => `${agent.name} (${agent.path.split("/").pop()})`).join(", ")}.`
+			: "No agents exist yet.",
+	].join("\n");
 }
 
 /** One tool per agent file. `registry` resolves the tools agents list; agents never get agent tools themselves. */
@@ -114,7 +155,8 @@ function agentTool(
 
 			// The child's agent: every extension but the agent tools, the agent's tools, model and instructions.
 			const installed = registry.snapshot().installed();
-			const extensions = installed.filter((candidate) => candidate.name !== self().name);
+			// Agents do not build agents: no agent tools, no agent-builder prompt section.
+			const extensions = installed.filter((candidate) => candidate.name !== self().name && candidate.name !== "pico-agent-builder");
 			const available = extensions.flatMap((candidate) => candidate.tools ?? []);
 			const change: { -readonly [K in keyof AgentChange]: AgentChange[K] } = { extensions, instructions: agent.instructions };
 			if (agent.tools) {
