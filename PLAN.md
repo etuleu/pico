@@ -182,6 +182,9 @@ while a file is written; the chat shows elapsed time instead.
 
 ## TODO (later)
 
+- **Artifacts section.** A dedicated place in the app, like Claude's artifacts, to browse and reopen generated
+  apps, documents, and other outputs. Placement and exact UI TBD.
+
 - **Live command output.** just-bash returns a command's output only when it finishes, so a long command shows a
   spinner and then everything at once, and output of a stopped or timed-out command is lost. Durable's
   `ShellExecOptions.onOutput` and the app's tool cards already handle streamed chunks; the gap is just-bash's
