@@ -2,7 +2,8 @@
 
 Goal: run the pi coding agent (https://github.com/earendil-works/pi) natively on iPhone.
 
-See `PRINCIPLES.md` for how we build it (files like Linux, keep it simple, user first, no concentration of power).
+See `PRINCIPLES.md` for how we build it (files like Linux, keep it simple, user first, no concentration of power)
+and `docs/concepts.md` for what agents, chats and runs are and what each can see.
 No laptop or server dependency. Personal use first; App Store later if it proves useful.
 
 ## Requirements
