@@ -194,9 +194,18 @@ while a file is written; the chat shows elapsed time instead.
   `node script.js`, CommonJS `require` of local files. Later: ES modules (transform), plain-JS packages from
   node_modules. Caveat: JSC has no public API to interrupt running code, so a timed-out script is abandoned on its
   thread. just-bash's `js-exec` (QuickJS in WASM + worker threads) is the alternative; unlikely to work on iOS as is.
-- **Export a chat as Markdown.** Sessions are stored in durable's commit-log format (`sessions/<id>/store/*.jsonl`),
-  which is hard to read. Add an export (share sheet / write into the workspace) that renders the transcript as
-  Markdown: user and assistant messages, tool calls with arguments and output, model and cost.
+- **Export a chat.** Sessions are stored in durable's commit-log format (`sessions/<id>/store/*.jsonl`), which is hard
+  to read. Export from the chat (share sheet, or write into the workspace) as Markdown: user and assistant messages,
+  tool calls with arguments and output, agent runs, model and cost. Optionally also the raw session folder, so it can
+  be re-imported on another device.
+- **Export all chats.** One action that exports every chat (a folder or zip of Markdown files, one per chat, plus an
+  index; optionally the raw session folders) for backup or moving to another device.
+- **Show the files of a chat.** A view per chat listing the files it created or changed (from its write / edit /
+  preview calls and git clones; bash changes are harder to attribute: maybe snapshot the working folder per run), with
+  open / preview / share. Ties a chat to its results ("where is the app I made in that chat?").
+- **Show all files.** An in-app file browser of the workspace (and optionally the config dir `~/.pi/agent` and the
+  sessions), with view, preview for HTML apps, share, rename, delete. The Files app can show the workspace, but not
+  the config or the sessions, and cannot preview apps.
 - **Long chats.** Today every open session is fully in memory: durable's JSONL storage replays and keeps the whole
   history, the engine loads the full transcript and resends all items to the app on changes, and SwiftUI renders the
   whole list. Ideas: send only the newest window of items plus "load earlier" (durable's `ConversationTranscript`
